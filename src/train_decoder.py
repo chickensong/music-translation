@@ -269,10 +269,8 @@ class Trainer:
 
         torch.save({'encoder_state': states['encoder_state'],
                     'decoder_state': self.decoder.module.state_dict(),
-                    'discriminator_state': states['discriminator_state'],
                     'model_optimizer_state': self.model_optimizer.state_dict(),
                     'dataset': self.args.rank,
-                    'd_optimizer_state': states['d_optimizer_state']
                     },
                    save_path)
 
