@@ -8,7 +8,7 @@
 set -e -x
 
 CODE=src
-DATA=/media/owen/ba9d40b5-89de-4832-bad4-156b118e4a66/chickendata_out/preprocessed
+DATA=$1/chickendata_out/preprocessed
 
 EXP=chickenNet
 export MASTER_PORT=29500
