@@ -36,6 +36,7 @@ parser.add_argument('--data',
 parser.add_argument('--checkpoint', default='',
                     metavar='C', type=str, help='Checkpoint path')
 parser.add_argument('--load-optimizer', action='store_true')
+parser.add_argument('--continue-training', action='store_true')
 parser.add_argument('--per-epoch', action='store_true',
                     help='Save model per epoch')
 
@@ -116,16 +117,28 @@ class Trainer:
         self.decoder = WaveNet(args)
 
         assert args.checkpoint, 'you MUST pass a checkpoint for the encoder'
-        self.start_epoch = 0
+
+        if args.continue_training:
+            checkpoint_args_path = os.path.dirname(args.checkpoint) + '/args.pth'
+            checkpoint_args = torch.load(checkpoint_args_path)
+
+            self.start_epoch = checkpoint_args[-1] + 1
+        else:
+            self.start_epoch = 0
+
         states = torch.load(args.checkpoint)
         self.encoder.load_state_dict(states['encoder_state'])
-        self.decoder.load_state_dict(states['decoder_state'])
+        if args.continue_training:
+            self.decoder.load_state_dict(states['decoder_state'])
         self.logger.info('Loaded checkpoint parameters')
 
         self.encoder = torch.nn.DataParallel(self.encoder).cuda()
         self.decoder = torch.nn.DataParallel(self.decoder).cuda()
 
         self.model_optimizer = optim.Adam(self.decoder.parameters(), lr=args.lr)
+
+        if args.continue_training:
+            self.model_optimizer.load_state_dict(states['model_optimizer_state'])
 
         self.lr_manager = torch.optim.lr_scheduler.ExponentialLR(self.model_optimizer, args.lr_decay)
         self.lr_manager.last_epoch = self.start_epoch
